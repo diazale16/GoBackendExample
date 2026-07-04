@@ -32,6 +32,7 @@ func main() {
 	}
 
 	storageClient, err := storage.New(storage.Config{
+		ProjectID: cfg.S3ProjectID,
 		Endpoint:  cfg.S3Endpoint,
 		Region:    cfg.S3Region,
 		AccessKey: cfg.S3AccessKey,
@@ -46,10 +47,10 @@ func main() {
 	docRepo := repositories.NewDocumentRepository(db.GetDB())
 
 	userService := services.NewUserService(userRepo)
-	docService := services.NewDocumentService(docRepo, userRepo, storageClient)
+	docService := services.NewDocumentService(docRepo, storageClient)
 
 	userCtrl := controllers.NewUserController(userService)
-	docCtrl := controllers.NewDocumentController(docService)
+	docCtrl := controllers.NewDocumentController(docService, storageClient)
 
 	router := gin.Default()
 	router.MaxMultipartMemory = 10 << 20
