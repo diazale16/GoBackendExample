@@ -14,7 +14,6 @@ type User struct {
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-	Documents []Document     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"documents,omitempty"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

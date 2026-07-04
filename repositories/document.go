@@ -26,7 +26,7 @@ func (r *DocumentRepository) Create(doc *models.Document) error {
 
 func (r *DocumentRepository) GetAll() ([]models.Document, error) {
 	var docs []models.Document
-	result := r.db.Preload("User").Find(&docs)
+	result := r.db.Find(&docs)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to get documents: %w", result.Error)
 	}
@@ -35,7 +35,7 @@ func (r *DocumentRepository) GetAll() ([]models.Document, error) {
 
 func (r *DocumentRepository) GetByID(id uuid.UUID) (*models.Document, error) {
 	var doc models.Document
-	result := r.db.Preload("User").First(&doc, "id = ?", id)
+	result := r.db.First(&doc, "id = ?", id)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil

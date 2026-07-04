@@ -13,36 +13,24 @@ import (
 )
 
 type DocumentService struct {
-	docRepo  *repositories.DocumentRepository
-	userRepo *repositories.UserRepository
-	storage  *storage.S3Client
+	docRepo *repositories.DocumentRepository
+	storage *storage.S3Client
 }
 
 func NewDocumentService(
 	docRepo *repositories.DocumentRepository,
-	userRepo *repositories.UserRepository,
 	storage *storage.S3Client,
 ) *DocumentService {
 	return &DocumentService{
-		docRepo:  docRepo,
-		userRepo: userRepo,
-		storage:  storage,
+		docRepo: docRepo,
+		storage: storage,
 	}
 }
 
 func (s *DocumentService) UploadDocument(
-	userID uuid.UUID,
 	file multipart.File,
 	header *multipart.FileHeader,
 ) (*models.Document, error) {
-	user, err := s.userRepo.GetByID(userID)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, fmt.Errorf("user not found")
-	}
-
 	contentType := header.Header.Get("Content-Type")
 	if contentType == "" {
 		contentType = "application/octet-stream"
@@ -59,7 +47,6 @@ func (s *DocumentService) UploadDocument(
 	}
 
 	doc := &models.Document{
-		UserID:     userID,
 		FileName:   header.Filename,
 		StorageKey: uploadResult.Key,
 		MimeType:   uploadResult.MimeType,

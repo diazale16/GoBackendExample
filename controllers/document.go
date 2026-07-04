@@ -11,25 +11,14 @@ import (
 
 type DocumentController struct {
 	service *services.DocumentService
+	storage *storage.S3Client
 }
 
-func NewDocumentController(service *services.DocumentService) *DocumentController {
-	return &DocumentController{service: service}
+func NewDocumentController(service *services.DocumentService, storage *storage.S3Client) *DocumentController {
+	return &DocumentController{service: service, storage: storage}
 }
 
 func (c *DocumentController) Upload(ctx *gin.Context) {
-	userIDStr := ctx.PostForm("user_id")
-	if userIDStr == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
-		return
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
-		return
-	}
-
 	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
@@ -38,10 +27,10 @@ func (c *DocumentController) Upload(ctx *gin.Context) {
 	defer file.Close()
 
 	allowedTypes := map[string]bool{
-		"text/plain":               true,
-		"image/png":                true,
-		"image/jpeg":               true,
-		"application/pdf":          true,
+		"text/plain":      true,
+		"image/png":       true,
+		"image/jpeg":      true,
+		"application/pdf": true,
 	}
 
 	contentType := header.Header.Get("Content-Type")
@@ -50,13 +39,13 @@ func (c *DocumentController) Upload(ctx *gin.Context) {
 		return
 	}
 
-	doc, err := c.service.UploadDocument(userID, file, header)
+	doc, err := c.service.UploadDocument(file, header)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	url := storage.BuildURL(doc.StorageKey)
+	url := c.storage.BuildURL(doc.StorageKey)
 	ctx.JSON(http.StatusCreated, doc.ToResponse(url))
 }
 
@@ -69,7 +58,7 @@ func (c *DocumentController) GetAll(ctx *gin.Context) {
 
 	response := make([]interface{}, len(docs))
 	for i, doc := range docs {
-		url := storage.BuildURL(doc.StorageKey)
+		url := c.storage.BuildURL(doc.StorageKey)
 		response[i] = doc.ToResponse(url)
 	}
 
@@ -95,7 +84,7 @@ func (c *DocumentController) GetByID(ctx *gin.Context) {
 		return
 	}
 
-	url := storage.BuildURL(doc.StorageKey)
+	url := c.storage.BuildURL(doc.StorageKey)
 	ctx.JSON(http.StatusOK, doc.ToResponse(url))
 }
 

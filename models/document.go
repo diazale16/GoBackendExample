@@ -9,14 +9,12 @@ import (
 
 type Document struct {
 	ID         uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
-	UserID     uuid.UUID      `gorm:"type:uuid;index;not null" json:"user_id"`
 	FileName   string         `gorm:"type:varchar(255);not null" json:"file_name"`
 	StorageKey string         `gorm:"type:varchar(512);not null" json:"storage_key"`
 	MimeType   string         `gorm:"type:varchar(100)" json:"mime_type"`
 	CreatedAt  time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt  time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
-	User       User           `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
 }
 
 func (d *Document) BeforeCreate(tx *gorm.DB) error {
@@ -28,7 +26,6 @@ func (d *Document) BeforeCreate(tx *gorm.DB) error {
 
 type DocumentResponse struct {
 	ID         uuid.UUID `json:"id"`
-	UserID     uuid.UUID `json:"user_id"`
 	FileName   string    `json:"file_name"`
 	StorageKey string    `json:"storage_key"`
 	MimeType   string    `json:"mime_type"`
@@ -40,7 +37,6 @@ type DocumentResponse struct {
 func (d *Document) ToResponse(url string) DocumentResponse {
 	return DocumentResponse{
 		ID:         d.ID,
-		UserID:     d.UserID,
 		FileName:   d.FileName,
 		StorageKey: d.StorageKey,
 		MimeType:   d.MimeType,
@@ -51,6 +47,5 @@ func (d *Document) ToResponse(url string) DocumentResponse {
 }
 
 type UploadDocumentRequest struct {
-	UserID   string `form:"user_id" binding:"required,uuid"`
 	FileName string `form:"file_name"`
 }

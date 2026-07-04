@@ -15,6 +15,7 @@ import (
 )
 
 type Config struct {
+	ProjectID string
 	Endpoint  string
 	Region    string
 	AccessKey string
@@ -23,8 +24,9 @@ type Config struct {
 }
 
 type S3Client struct {
-	client *s3.Client
-	bucket string
+	client    *s3.Client
+	bucket    string
+	projectID string
 }
 
 type UploadResult struct {
@@ -71,8 +73,9 @@ func New(cfg Config) (*S3Client, error) {
 	log.Printf("S3 client initialized (endpoint: %s, bucket: %s)", cfg.Endpoint, cfg.Bucket)
 
 	return &S3Client{
-		client: client,
-		bucket: cfg.Bucket,
+		client:    client,
+		bucket:    cfg.Bucket,
+		projectID: cfg.ProjectID,
 	}, nil
 }
 
@@ -121,8 +124,7 @@ func (s *S3Client) GetURL(key string) string {
 }
 
 func (s *S3Client) buildURL(key string) string {
-	// Supabase Storage URL format
-	return fmt.Sprintf("https://cigezhjsvjomclfgrwgk.storage.supabase.co/storage/v1/object/authenticated/%s/%s", s.bucket, key)
+	return fmt.Sprintf("https://%s.storage.supabase.co/storage/v1/object/authenticated/%s/%s", s.projectID, s.bucket, key)
 }
 
 func generateKey(filename string) string {
@@ -130,6 +132,6 @@ func generateKey(filename string) string {
 	return fmt.Sprintf("uploads/%s/%s", time.Now().Format("2006/01/02"), id+"_"+filename)
 }
 
-func BuildURL(key string) string {
-	return fmt.Sprintf("https://cigezhjsvjomclfgrwgk.storage.supabase.co/storage/v1/object/authenticated/%s", key)
+func (s *S3Client) BuildURL(key string) string {
+	return s.buildURL(key)
 }
